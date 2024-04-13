@@ -122,11 +122,6 @@ def scroll(driver, wait, action, profile, max_runtime, start_time, new_ip):
                     break
         current_time_follow = time.time()
         elapsed_time_follow = current_time_follow - start_time_follow
-        print('-------')
-        print(elapsed_time_follow >= max_runtime_follow)
-        print(is_follow)
-        print(current_time_follow)
-        print(start_time_follow)
         if elapsed_time_follow >= max_runtime_follow and is_follow is False:
             print('action')
             action_follow_by_search(driver, action, wait, max_runtime, start_time)
@@ -180,6 +175,21 @@ def action_follow_by_search(driver, action, wait, max_runtime, start_time):
             if is_scroll_down_complete(driver):
                 break
             element = wait.until(lambda driver: waitNewElement(driver, url_current, False))
+def rotate_ip(key):
+    url = "http://127.0.0.1:9000/rotate/{}".format(key)
+    print(url)
+    try:
+        response = requests.post(url)
+        if response.status_code == 200:
+            response_data = response.json()
+            real_ip_address = response_data.get('realIpAddress')
+            return real_ip_address
+        else:
+            print('not 200')
+            return None
+    except requests.exceptions.RequestException as e:
+        print(e)
+        return None
 def process_profile(profile):
     width = random.uniform(350,400)
     height = random.uniform(900,1080)
@@ -221,12 +231,21 @@ def process_profile(profile):
         if current_ip is not None:
             break
     print(current_ip)
-    new_ip = wait_until_new_ip(current_ip, profile.proxy)
+    new_ip = None
+    while True:
+        real_ip = rotate_ip('K31bb832427354384b6fc25f4ce51fc4e')
+        print(real_ip)
+        if real_ip is not None and real_ip != current_ip:
+            new_ip = real_ip
+            break
+        time.sleep(10)
+
     print(new_ip)
     
     start_time = time.time()
     
     driver.get("https://twitter.com/")
+    time.sleep(5)
     if driver.current_url != 'https://twitter.com/home':
         try:
             button_sign_in = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'a[role="link"][data-testid="loginButton"]')))
