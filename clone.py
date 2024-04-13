@@ -233,7 +233,7 @@ def process_profile(profile):
     print(current_ip)
     new_ip = None
     while True:
-        real_ip = rotate_ip('K31bb832427354384b6fc25f4ce51fc4e')
+        real_ip = rotate_ip(profile.content_post)
         print(real_ip)
         if real_ip is not None and real_ip != current_ip:
             new_ip = real_ip
@@ -285,6 +285,8 @@ def process_profile(profile):
                     while True:
                         if action_continue(driver) == 1:
                             break
+                else :
+                    action_continue(driver)
                 current_time = time.time()
                 elapsed_time = current_time - start_time
                 if elapsed_time >= max_runtime:
@@ -295,6 +297,37 @@ def process_profile(profile):
             except Exception as e:
                 print('exception')
                 print(e)
+                if driver.current_url != 'https://twitter.com/home':
+                    try:
+                        button_sign_in = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'a[role="link"][data-testid="loginButton"]')))
+                        if button_sign_in:
+                            action.move_to_element(button_sign_in).perform()
+                            action.click(button_sign_in).perform()
+                            input_email = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'input[name="text"][type="text"]')))
+                            if input_email:
+                                action.send_keys_to_element(input_email, profile.username).perform()
+                                button_next = find_element_by_text(driver, By.TAG_NAME, 'span', 'Next')
+                                if button_next:
+                                    action.move_to_element(button_next).perform()
+                                    time.sleep(1)
+                                    action.click(button_next).perform()
+                                    input_password = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'input[name="password"][type="password"]')))
+                                    if input_password:
+                                        action.send_keys_to_element(input_password, profile.password).perform()
+                                        time.sleep(1)
+                                        button_log_in = find_element_by_text(driver, By.TAG_NAME, 'span', 'Log in')
+                                        if button_log_in:
+                                            action.click(button_log_in).perform()
+                                            input_otp = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'input[name="text"][type="text"][data-testid="ocfEnterTextTextInput"]')))
+                                            if input_otp:                                
+                                                totp = pyotp.TOTP(profile.scret_key)
+                                                action.send_keys_to_element(input_otp, totp.now()).perform()
+                                                button_next = find_element_by_text(driver, By.TAG_NAME, 'span', 'Next')
+                                                if button_next:
+                                                    action.move_to_element(button_next).perform()
+                                                    action.click(button_next).perform()
+                    except:
+                        pass
                 if action_start(driver) == 1:
                     while True:
                         if action_continue(driver) == 1:
