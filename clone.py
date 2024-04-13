@@ -102,19 +102,54 @@ def find_button_follow(tweet_details):
         return None
     return None
 def scroll(driver, wait, action, profile, max_runtime, start_time, new_ip):
+    start_time_follow = time.time()
+    max_runtime_follow = 1 * 60
+    is_follow = False
+    time.sleep(random.uniform(5,10))
+    if action_start(driver) == 1:
+        while True:
+            if action_continue(driver) == 1:
+                break
+    element = valid_twwets_by_twwets(wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'div[data-testid="cellInnerDiv"]'))))[0]
+    while True:
+        current_time = time.time()
+        elapsed_time = current_time - start_time
+        if elapsed_time >= max_runtime:
+            break
+        if action_start(driver) == 1:
+            while True:
+                if action_continue(driver) == 1:
+                    break
+        current_time_follow = time.time()
+        elapsed_time_follow = current_time_follow - start_time_follow
+        print('-------')
+        print(elapsed_time_follow >= max_runtime_follow)
+        print(is_follow)
+        print(current_time_follow)
+        print(start_time_follow)
+        if elapsed_time_follow >= max_runtime_follow and is_follow is False:
+            print('action')
+            action_follow_by_search(driver, action, wait, max_runtime, start_time)
+            is_follow = True
+            button_home = find_home_button(wait)
+            if button_home:
+                action.click(button_home).perform()
+                element = wait.until(lambda driver: waitNewElement(driver, None, True))
+        url_current = find_url_tweet(element)
+        action.move_to_element(element).perform()
+        time.sleep(random.uniform(2,5))
+        element = wait.until(lambda driver: waitNewElement(driver, url_current, False))
 
-    action_start(driver)
-    action_continue(driver)
+def action_follow_by_search(driver, action, wait, max_runtime, start_time):
+    if action_start(driver) == 1:
+        while True:
+            if action_continue(driver) == 1:
+                break
     hash_tags = read_hashtag_comment_by_main_account()
     for tag in hash_tags:
         action_search_by_keyword(wait, action, tag.keyword)
         element = valid_twwets_by_twwets(wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'div[data-testid="cellInnerDiv"]'))))[0]
         while True:
-            #current_ip = get_ip_proxy(profile.proxy)
-            #if current_ip != new_ip:
-            #    return 1
-            action_start(driver)
-            action_continue(driver)
             current_time = time.time()
             elapsed_time = current_time - start_time
             if elapsed_time >= max_runtime:
@@ -129,7 +164,6 @@ def scroll(driver, wait, action, profile, max_runtime, start_time, new_ip):
                 time.sleep(random.uniform(1,2))
                 action.click(tweet_content).perform()
                 tweet_details = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div[data-testid="cellInnerDiv"]')))
-                print(tweet_details.text)
                 time.sleep(random.uniform(5,10))
                 follow_button = find_button_follow(tweet_details)
                 if follow_button:
@@ -138,30 +172,14 @@ def scroll(driver, wait, action, profile, max_runtime, start_time, new_ip):
                     time.sleep(random.uniform(1,2))
                     action.click(follow_button).perform()
                 time.sleep(random.uniform(5,10))
+                if action_start(driver) == 1:
+                    while True:
+                        if action_continue(driver) == 1:
+                            break
                 break
             if is_scroll_down_complete(driver):
                 break
             element = wait.until(lambda driver: waitNewElement(driver, url_current, False))
-    time.sleep(random.uniform(5,10))
-    button_home = find_home_button(wait)
-    if button_home:
-        print('scroll')
-        action.click(button_home).perform()
-        time.sleep(random.uniform(5,10))
-        element = valid_twwets_by_twwets(wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'div[data-testid="cellInnerDiv"]'))))[0]
-        while True:
-            action_start(driver)
-            action_continue(driver)
-            current_time = time.time()
-            elapsed_time = current_time - start_time
-            if elapsed_time >= max_runtime:
-                break
-            url_current = find_url_tweet(element)
-            action.move_to_element(element).perform()
-            time.sleep(random.uniform(2,5))
-            element = wait.until(lambda driver: waitNewElement(driver, url_current, False))
-
-            
 def process_profile(profile):
     width = random.uniform(350,400)
     height = random.uniform(900,1080)
@@ -244,8 +262,10 @@ def process_profile(profile):
     if profile.work:
         while True:
             try:
-                action_start(driver)
-                action_continue(driver)
+                if action_start(driver) == 1:
+                    while True:
+                        if action_continue(driver) == 1:
+                            break
                 current_time = time.time()
                 elapsed_time = current_time - start_time
                 if elapsed_time >= max_runtime:
@@ -256,14 +276,15 @@ def process_profile(profile):
             except Exception as e:
                 print('exception')
                 print(e)
-                action_start(driver)
-                action_continue(driver)
+                if action_start(driver) == 1:
+                    while True:
+                        if action_continue(driver) == 1:
+                            break
                 continue
-            
-            
+    if get_ip_proxy(profile.proxy) == new_ip:
+        print('ip mapping khi ket thuc')
     else:
-        time.sleep(300)
-    print(get_ip_proxy(profile.proxy))
+        print('ip khong mapping khi ket thuc')
     quit_driver(driver)
 
 def action_continue(driver):
@@ -271,15 +292,19 @@ def action_continue(driver):
     elements = driver.find_elements(By.CSS_SELECTOR, 'input[type="submit"]')
     for element in elements:
         if element.get_attribute('value') == 'Continue to X':
-            action.click(element)
-            break
+            action.click(element).perform()
+            print('click continue')
+            return 1
+    return 0
 def action_start(driver):
     action = ActionChains(driver)
     elements = driver.find_elements(By.CSS_SELECTOR, 'input[type="submit"]')
     for element in elements:
         if element.get_attribute('value') == 'Start':
-            action.click(element)
-            break
+            action.click(element).perform()
+            print('click start')
+            return 1
+    return 0
 def quit_driver(driver):
     try:
         os.kill(driver.browser_pid, 15)
@@ -320,17 +345,6 @@ def valid_twwets_by_twwets(twwets):
             valid_twwets.append(twwet)
     return valid_twwets
 
-#automation
-def find_element_ads_in_elements(elements):
-    try:
-        for e in elements:
-            span_elements = e.find_elements(By.TAG_NAME, 'span')
-            for s in span_elements:
-                if s.text == 'Ad':
-                    return e
-    except:
-        return None
-    return None
 def wait_new_element_by_index(driver, next_index):
     try:
         twwets = driver.find_elements(By.CSS_SELECTOR, "div[data-testid='cellInnerDiv']")
@@ -593,7 +607,7 @@ def is_tweet_comment_by_main_account(element, urls, main_accounts_not_yet_follow
 
 if __name__ == '__main__':
     max_threads = 1
-    profiles = read_profile_list_from_file1(os.getenv("PROFILE_PATH"))
+    profiles = read_profile_list_from_file1(os.getenv("PROFILE_PATH"),'Clone_Follow')
     profiles_start = [profile for profile in profiles if profile.start]
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_threads) as executor:
         futures = [executor.submit(process_profile, profile) for profile in profiles_start]
