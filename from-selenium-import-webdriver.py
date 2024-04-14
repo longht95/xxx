@@ -1,6 +1,8 @@
 import json
 import re
 import sys
+import pyotp
+import requests
 from selenium.webdriver.chrome.service import Service
 import undetected_chromedriver as uc
 import time
@@ -90,9 +92,17 @@ def action_tweet_ads(tweet_details, action, wait, profile, driver):
                         time.sleep(random.uniform(5,10))
                         is_done = True
                 if element_ads is None:
+                    print('element_ads is null')
+                    print(e.text)
+                    check = e.find_elements(By.CSS_SELECTOR, 'a[href]')
+                    for c in check:
+                        print(c.get_attribute('href'))
                     url_post_ads = find_url_tweet(e)
+                    print(url_post_ads)
                     if url_post_ads and url_post_ads not in urls_clicked:
                         is_done = True
+                        action.scroll_to_element(e).perform()
+                        time.sleep(random.uniform(5, 10))
                         print('click ads post')
                         action_details(wait, action, e)
                         with open(os.getenv("PROCESS_ADS_PATH")+profile.username+'.txt', 'a+') as file:
@@ -164,6 +174,12 @@ def scroll(driver, wait, action, profile, max_runtime, start_time):
     percent_post_tweet = 0.1
     count_error = 0
     while True:
+        if action_start(driver) == 1:
+            while True:
+                if action_continue(driver) == 1:
+                    break
+        else :
+            action_continue(driver)
         current_time = time.time()
         elapsed_time = current_time - start_time
         url_current = find_url_tweet(element)
@@ -173,8 +189,9 @@ def scroll(driver, wait, action, profile, max_runtime, start_time):
         if url_current is None:
             element = wait.until(lambda driver: waitNewElement(driver, url_current, True))
             continue
-
-        if profile.view_ads and is_tweet_by_main_account:
+        
+        total_comment = get_number_commnet(element)
+        if profile.view_ads and is_tweet_by_main_account and total_comment >= 2:
             ads_tweets = read_following_accounts_from_file(os.getenv("PROCESS_ADS_POST")+profile.username+'.txt')
             if url_current not in ads_tweets:
                 with open(os.getenv("PROCESS_ADS_POST")+profile.username+'.txt', 'a+') as file:
@@ -295,15 +312,96 @@ def scroll(driver, wait, action, profile, max_runtime, start_time):
                 element = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div[data-testid="cellInnerDiv"]')))
             if (count_error == 3):
                 return
-            
+def get_number_commnet(element):
+    try:
+        reply = element.find_element(By.CSS_SELECTOR, 'div[data-testid="reply"]')
+        number_comment = reply.find_element(By.CSS_SELECTOR, 'span[data-testid="app-text-transition-container"]')
+        if number_comment and number_comment.text != '':
+            return int(number_comment.text)
+    except:
+        return 0
+    return 0
+def rotate_ip(key):
+    url = "http://127.0.0.1:9000/rotate/{}".format(key)
+    print(url)
+    try:
+        response = requests.post(url)
+        if response.status_code == 200:
+            response_data = response.json()
+            real_ip_address = response_data.get('realIpAddress')
+            return real_ip_address
+        else:
+            print('not 200')
+            return None
+    except requests.exceptions.RequestException as e:
+        print(e)
+        return None
+def get_ip_proxy(http):
+    try:
+        proxy = {
+            'http': http
+        }
+        response = requests.get('http://httpbin.org/ip', proxies=proxy, timeout=10)
+        if response.status_code == 200:
+            return response.json()['origin']
+        else:
+            return None
+    except Exception as e:
+        return None
+def action_login(driver, action, wait, profile):
+    if driver.current_url == 'https://twitter.com/':
+        try:
+            button_sign_in = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'a[role="link"][data-testid="loginButton"]')))
+            if button_sign_in:
+                action.move_to_element(button_sign_in).perform()
+                action.click(button_sign_in).perform()
+                time.sleep(5)
+                
+                input_email = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'input[name="text"][type="text"]')))
+                if input_email:
+                    action.send_keys_to_element(input_email, profile.username).perform()
+                    button_next = find_element_by_text(driver, By.TAG_NAME, 'span', 'Next')
+                    if button_next:
+                        action.move_to_element(button_next).perform()
+                        action.click(button_next).perform()
+                        time.sleep(5)
+                        
+                        input_password = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'input[name="password"][type="password"]')))
+                        if input_password:
+                            action.send_keys_to_element(input_password, profile.password).perform()
+                            time.sleep(5)
+                            button_log_in = find_element_by_text(driver, By.TAG_NAME, 'span', 'Log in')
+                            if button_log_in:
+                                action.click(button_log_in).perform()
+                                time.sleep(5)
+                                
+                                input_otp = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'input[name="text"][type="text"][data-testid="ocfEnterTextTextInput"]')))
+                                if input_otp:                                
+                                    totp = pyotp.TOTP(profile.scret_key)
+                                    action.send_keys_to_element(input_otp, totp.now()).perform()
+                                    button_next = find_element_by_text(driver, By.TAG_NAME, 'span', 'Next')
+                                    if button_next:
+                                        action.move_to_element(button_next).perform()
+                                        action.click(button_next).perform()
+        except:
+            print('exception login')
+            print(profile.username)
+            pass
 def process_profile(profile):
     width = random.uniform(350,400)
     height = random.uniform(900,1080)
     max_runtime = profile.time_process * 60
     start_time = time.time()
     chrome_options = uc.ChromeOptions()
+    preferences = {
+        "webrtc.ip_handling_policy" : "disable_non_proxied_udp",
+        "webrtc.multiple_routes_enabled": False,
+        "webrtc.nonproxied_udp_enabled" : False
+    }
+    chrome_options.add_experimental_option("prefs", preferences)
     chrome_options.add_argument("--window-size="+str(width)+","+str(height))
     chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument(f"--load-extension=C:/Users/Long/Downloads/extension")
     print('--proxy-server={}'.format(profile.proxy))
     if profile.proxy:
         chrome_options.add_argument('--proxy-server={}'.format(profile.proxy))
@@ -321,14 +419,35 @@ def process_profile(profile):
     action = ActionChains(driver)
     driver.set_window_size(width, height)
     driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'})
-    driver.get("https://twitter.com/")
-    if driver.current_url != 'https://twitter.com/home':
-        time.sleep(120)
-    else:
+    current_ip = None
+    while True:
+        current_ip = get_ip_proxy(profile.proxy)
+        print(current_ip)
+        if current_ip is not None:
+            break
+    print(current_ip)
+    new_ip = None
+    while True:
+        real_ip = rotate_ip(profile.content_post)
+        print(real_ip)
+        if real_ip is not None and real_ip != current_ip:
+            new_ip = real_ip
+            break
         time.sleep(10)
+
+    print(new_ip)
+    driver.get("https://twitter.com/")
+    time.sleep(10)
+    action_login(driver, action, wait, profile)
     if profile.work:
         while True:
             try:
+                if action_start(driver) == 1:
+                    while True:
+                        if action_continue(driver) == 1:
+                            break
+                else :
+                    action_continue(driver)
                 current_time = time.time()
                 elapsed_time = current_time - start_time
                 if elapsed_time >= max_runtime:
@@ -337,22 +456,61 @@ def process_profile(profile):
             except StaleElementReferenceException as s:
                 action_by_pass_bot(driver, action)
                 print('StaleElementReferenceException')
-                print(s)
+                if action_start(driver) == 1:
+                    while True:
+                        if action_continue(driver) == 1:
+                            break
+                
+                else :
+                    action_continue(driver)
+                action_login(driver, action, wait, profile)
                 continue
             except NoSuchElementException as n:
                 action_by_pass_bot(driver, action)
+                if action_start(driver) == 1:
+                    while True:
+                        if action_continue(driver) == 1:
+                            break
+                else :
+                    action_continue(driver)
                 print('NoSuchElementException')
                 print(n)
+                action_login(driver, action, wait, profile)
                 continue
             except Exception as e:
                 print(e)
+                if action_start(driver) == 1:
+                    while True:
+                        if action_continue(driver) == 1:
+                            break
+                else :
+                    action_continue(driver)
+                action_login(driver, action, wait, profile)
                 break
         
             
     else:
-        time.sleep(300)
+        time.sleep(120)
     quit_driver(driver)
 
+def action_continue(driver):
+    action = ActionChains(driver)
+    elements = driver.find_elements(By.CSS_SELECTOR, 'input[type="submit"]')
+    for element in elements:
+        if element.get_attribute('value') == 'Continue to X':
+            action.click(element).perform()
+            print('click continue')
+            return 1
+    return 0
+def action_start(driver):
+    action = ActionChains(driver)
+    elements = driver.find_elements(By.CSS_SELECTOR, 'input[type="submit"]')
+    for element in elements:
+        if element.get_attribute('value') == 'Start':
+            action.click(element).perform()
+            print('click start')
+            return 1
+    return 0
 def quit_driver(driver):
     try:
         os.kill(driver.browser_pid, 15)
@@ -773,6 +931,15 @@ def find_url_tweet(element):
         for e in elements:
             if pattern.match(e.get_attribute('href')):
                 return e.get_attribute('href')
+    except:
+        return None
+    return None
+def find_element_by_text(element, by, tag_name, text):
+    try:
+        elements = element.find_elements(by, tag_name)
+        for e in elements:
+            if text == e.text:
+                return e
     except:
         return None
     return None
