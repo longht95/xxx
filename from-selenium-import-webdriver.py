@@ -19,7 +19,7 @@ from dotenv import load_dotenv
 from AI import generate_comment_by_image_and_text, generate_comment_by_text, generate_content_by_text, generate_post
 from Checker import is_video_tweet, is_white_list_account
 from actions import action_details
-from files import read_following_accounts_from_file, read_profile_list_from_file, read_urls_comment_by_main_account, read_white_account_from_file
+from files import read_following_accounts_from_file, read_profile_list_from_file, read_profile_list_from_file1, read_urls_comment_by_main_account, read_white_account_from_file
 import concurrent.futures
 from finds import find_back_navigation, find_button_search, find_contents, find_home_button, find_images, find_input_search
 from urllib.parse import urlparse
@@ -153,6 +153,10 @@ def is_scroll_down_complete(driver):
     return viewport_height + scroll_position >= document_height
 def scroll(driver, wait, action, profile, max_runtime, start_time):
     #New code
+    if action_start(driver) == 1:
+        while True:
+            if action_continue(driver) == 1:
+                break
     white_accounts = read_white_account_from_file(os.getenv('PROFILE_PATH'))
     following_accounts = read_following_accounts_from_file(os.getenv("PROCESS_ACCOUNT_PATH")+profile.username+'.txt')
     
@@ -419,23 +423,7 @@ def process_profile(profile):
     action = ActionChains(driver)
     driver.set_window_size(width, height)
     driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'})
-    current_ip = None
-    while True:
-        current_ip = get_ip_proxy(profile.proxy)
-        print(current_ip)
-        if current_ip is not None:
-            break
-    print(current_ip)
-    new_ip = None
-    while True:
-        real_ip = rotate_ip(profile.content_post)
-        print(real_ip)
-        if real_ip is not None and real_ip != current_ip:
-            new_ip = real_ip
-            break
-        time.sleep(10)
 
-    print(new_ip)
     driver.get("https://twitter.com/")
     time.sleep(10)
     action_login(driver, action, wait, profile)
@@ -486,7 +474,7 @@ def process_profile(profile):
                 else :
                     action_continue(driver)
                 action_login(driver, action, wait, profile)
-                break
+                continue
         
             
     else:
@@ -965,7 +953,8 @@ def is_tweet_comment_by_main_account(element, urls, main_accounts_not_yet_follow
 
 if __name__ == '__main__':
     max_threads = int(os.getenv("MAX_THREAD"))
-    profiles = read_profile_list_from_file(os.getenv("PROFILE_PATH"))
+    #profiles = read_profile_list_from_file(os.getenv("PROFILE_PATH"))
+    profiles = read_profile_list_from_file1(os.getenv("PROFILE_PATH"),'Clone_Follow')
     random.shuffle(profiles)
     profiles_start = [profile for profile in profiles if profile.start]
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_threads) as executor:
