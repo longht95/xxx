@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2024-05-12T07:52:43.250Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0" etag="LRwKwo4Vx5EPtaDYY_Y-" scale="1" border="0" version="24.4.0" type="device">
+  <diagram name="Page-1" id="IzNyZyohszud83nD8I2O">
+    <mxGraphModel dx="1426" dy="793" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2" value="" style="shape=ellipse;strokeWidth=2;labelBackgroundColor=none;" parent="1" vertex="1">
+          <mxGeometry x="396" y="50" width="36" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="3" value="OPEN" style="shape=rectangle;strokeWidth=1;labelBackgroundColor=none;" parent="1" vertex="1">
+          <mxGeometry x="354" y="250" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="4" value="" style="shape=ellipse;strokeWidth=2;labelBackgroundColor=none;" parent="1" vertex="1">
+          <mxGeometry x="374" y="520" width="80" height="80" as="geometry" />
+        </mxCell>
+        <object label="" id="5">
+          <mxCell style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=none;fontColor=default;verticalAlign=middle;align=center;" parent="1" source="2" target="3" edge="1">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points" />
+            </mxGeometry>
+          </mxCell>
+        </object>
+        <mxCell id="6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=none;fontColor=default;" parent="1" source="E_yVXSIhzXdYxwNo8oAk-7" target="4" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="E_yVXSIhzXdYxwNo8oAk-7" value="READY FOR&#xa;REVIEW REQ" style="shape=rectangle;strokeWidth=1;labelBackgroundColor=none;" parent="1" vertex="1">
+          <mxGeometry x="354" y="351" width="120" height="39" as="geometry" />
+        </mxCell>
+        <mxCell id="E_yVXSIhzXdYxwNo8oAk-9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;labelBackgroundColor=none;fontColor=default;" parent="1" source="3" target="E_yVXSIhzXdYxwNo8oAk-7" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="420" y="300" as="sourcePoint" />
+            <mxPoint x="424" y="260" as="targetPoint" />
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="E_yVXSIhzXdYxwNo8oAk-10" value="BA creaters requirement" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;labelBackgroundColor=default;" parent="1" vertex="1">
+          <mxGeometry x="336" y="140" width="156" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
